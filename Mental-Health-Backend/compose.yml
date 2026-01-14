@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  
+  server-1:
+    build: .
+    container_name: sz_backend_1
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - backend
+  
+  server-2:
+    build: .
+    container_name: sz_backend_2
+    env_file:
+      - .env
+    ports:
+      - "3001:3000"
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+  server-3:
+    build: .
+    container_name: sz_backend_3
+    env_file:
+      - .env
+    ports:
+      - "3002:3000"
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:latest
+    container_name: sz_nginx_proxy
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - server-1
+      - server-2
+      - server-3
+    networks:
+      - backend
+  
+volumes:
+  pgdata:
+
+networks:
+  backend:
+    driver: bridge
